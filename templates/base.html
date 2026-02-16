@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Deepfake Detection System{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <!-- Logo -->
+            <div class="nav-logo">
+                <div class="logo-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-main">DeepVerify</span>
+                    <span class="logo-sub">AI + Blockchain</span>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <div class="nav-links">
+                <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="{{ url_for('upload_video_page') }}" class="nav-link {% if request.endpoint == 'upload_video_page' %}active{% endif %}">
+                    <i class="fas fa-video"></i> Detect
+                </a>
+                <a href="{{ url_for('verify_only_page') }}" class="nav-link {% if request.endpoint == 'verify_only_page' %}active{% endif %}">
+                    <i class="fas fa-link"></i> Verify
+                </a>
+                {% if session.get('admin_logged_in') %}
+                    <a href="{{ url_for('admin_panel') }}" class="nav-link">
+                        <i class="fas fa-cog"></i> Admin Panel
+                    </a>
+                {% endif %}
+            </div>
+
+            <!-- Right Side Actions -->
+            <div class="nav-actions">
+                {% if not session.get('admin_logged_in') %}
+                    <a href="{{ url_for('admin_login') }}" class="btn-admin">
+                        <i class="fas fa-lock"></i> Admin Login
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('admin_logout') }}" class="btn-admin">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                {% endif %}
+                
+                <!-- Blockchain Status -->
+                <div class="blockchain-status">
+                    <div class="status-dot {% if blockchain_connected %}connected{% else %}disconnected{% endif %}"></div>
+                    <span>Blockchain {% if blockchain_connected %}Connected{% else %}Offline{% endif %}</span>
+                </div>
+            </div>
+
+            <!-- Mobile Menu Button -->
+            <button class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu (Hidden by default) -->
+    <div class="mobile-menu">
+        <a href="{{ url_for('index') }}"><i class="fas fa-home"></i> Home</a>
+        <a href="{{ url_for('upload_video_page') }}"><i class="fas fa-video"></i> Detect</a>
+        <a href="{{ url_for('verify_only_page') }}"><i class="fas fa-link"></i> Verify</a>
+        {% if session.get('admin_logged_in') %}
+            <a href="{{ url_for('admin_panel') }}"><i class="fas fa-cog"></i> Admin Panel</a>
+            <a href="{{ url_for('admin_logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        {% else %}
+            <a href="{{ url_for('admin_login') }}"><i class="fas fa-lock"></i> Admin Login</a>
+        {% endif %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            <span class="alert-icon">
+                                {% if category == 'success' %}
+                                    <i class="fas fa-check-circle"></i>
+                                {% elif category == 'error' %}
+                                    <i class="fas fa-exclamation-circle"></i>
+                                {% else %}
+                                    <i class="fas fa-info-circle"></i>
+                                {% endif %}
+                            </span>
+                            <span class="alert-text">{{ message }}</span>
+                            <button class="alert-close">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3><i class="fas fa-shield-alt"></i> DeepVerify</h3>
+                <p>Combining AI-powered deepfake detection with blockchain verification for secure media authentication.</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <a href="{{ url_for('index') }}">Home</a>
+                <a href="{{ url_for('upload_video_page') }}">Detect Deepfakes</a>
+                <a href="{{ url_for('verify_only_page') }}">Verify on Blockchain</a>
+                <a href="{{ url_for('admin_login') }}">Admin Panel</a>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Technology Stack</h3>
+                <span>Python Flask</span>
+                <span>PyTorch AI</span>
+                <span>Ethereum Blockchain</span>
+                <span>Web3.py</span>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Contact</h3>
+                <p>Academic Project</p>
+                <p>Final Year Computer Science</p>
+                <p>Deepfake Detection System</p>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2024 DeepVerify - Deepfake Detection & Blockchain Verification System. Academic Project.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Mobile menu toggle
+        document.querySelector('.mobile-menu-btn').addEventListener('click', function() {
+            document.querySelector('.mobile-menu').classList.toggle('active');
+        });
+
+        // Close alerts
+        document.querySelectorAll('.alert-close').forEach(button => {
+            button.addEventListener('click', function() {
+                this.parentElement.style.display = 'none';
+            });
+        });
+
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            document.querySelectorAll('.alert').forEach(alert => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.style.display = 'none', 300);
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

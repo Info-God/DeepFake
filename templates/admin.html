@@ -1,0 +1,92 @@
+<!-- templates/admin.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Register Videos</title>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .upload-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            margin: 5px;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .video-list {
+            margin-top: 20px;
+        }
+        .video-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Admin Panel - Register Videos on Blockchain</h1>
+        
+        <div class="upload-section">
+            <h2>📝 Register New Video</h2>
+            
+            <form action="{{ url_for('admin_register') }}" method="post" enctype="multipart/form-data">
+                <label>Select Video:</label>
+                <input type="file" name="video" accept="video/*" required>
+                <br><br>
+                
+                <label>Description:</label>
+                <input type="text" name="description" placeholder="E.g., Original News Clip - CNN" style="width: 100%; padding: 8px; margin: 10px 0;">
+                <br><br>
+                
+                <button type="submit" class="btn btn-success">✅ Register on Blockchain</button>
+            </form>
+            
+            <p><small>This will register the video as authentic on the blockchain</small></p>
+        </div>
+        
+        <div class="upload-section">
+            <h2>📋 Already Registered Videos</h2>
+            
+            <div class="video-list">
+                {% if registered_videos %}
+                    {% for video in registered_videos %}
+                    <div class="video-item">
+                        <strong>{{ video.description }}</strong><br>
+                        <small>Hash: {{ video.hash[:20] }}...{{ video.hash[-20:] }}</small><br>
+                        <small>Registered by: {{ video.uploader[:10] }}...</small><br>
+                        <small>Date: {{ video.registered_date }}</small>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No videos registered yet.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="{{ url_for('index') }}" class="btn">← Back to Main Page</a>
+        </div>
+    </div>
+</body>
+</html>

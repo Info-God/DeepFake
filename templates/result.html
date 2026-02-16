@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .result-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        .ai-result {
+            background: #e8f4fd;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .blockchain-result {
+            background: #f0e8fd;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            color: white;
+            font-weight: bold;
+        }
+        .real-badge {
+            background: #28a745;
+        }
+        .fake-badge {
+            background: #dc3545;
+        }
+        .verified-badge {
+            background: #6f42c1;
+        }
+        .not-verified-badge {
+            background: #ffc107;
+            color: black;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        .hash-display {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            word-break: break-all;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Analysis Results</h1>
+        
+        <div class="result-card">
+            <h2>Video: {{ filename }}</h2>
+            
+            <!-- AI Detection Results -->
+            <div class="ai-result">
+                <h3>🤖 AI Deepfake Detection</h3>
+                <p><strong>Result:</strong> 
+                    <span class="badge {{ 'real-badge' if not is_fake else 'fake-badge' }}">
+                        {{ 'REAL' if not is_fake else 'FAKE' }}
+                    </span>
+                </p>
+                <p><strong>Fake Probability:</strong> {{ fake_prob }}%</p>
+                <p><strong>Frames Analyzed:</strong> {{ frame_count }}</p>
+                
+                <div class="interpretation">
+                    {% if not is_fake %}
+                        <p>✅ The AI model predicts this video is <strong>REAL</strong> with {{ 100 - fake_prob }}% confidence.</p>
+                    {% else %}
+                        <p>⚠️ The AI model predicts this video is <strong>FAKE</strong> with {{ fake_prob }}% confidence.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Blockchain Verification Results -->
+            <div class="blockchain-result">
+                <h3>🔗 Blockchain Verification</h3>
+                
+                {% if not blockchain_connected %}
+                    <p>❌ Blockchain not connected</p>
+                    <p><small>Run Ganache and deploy contract to enable blockchain verification</small></p>
+                {% elif blockchain_data.verified %}
+                    <p><strong>Status:</strong> 
+                        <span class="badge verified-badge">✅ VERIFIED</span>
+                    </p>
+                    <p><strong>Description:</strong> {{ blockchain_data.description }}</p>
+                    <p><strong>Registered by:</strong> {{ blockchain_data.uploader[:10] }}...{{ blockchain_data.uploader[-8:] }}</p>
+                    <p><strong>Registered on:</strong> {{ blockchain_data.registered_date }}</p>
+                    
+                    <div class="interpretation">
+                        <p>✅ This video is <strong>registered on the blockchain</strong> as authentic content.</p>
+                    </div>
+                {% else %}
+                    <p><strong>Status:</strong> 
+                        <span class="badge not-verified-badge">❌ NOT VERIFIED</span>
+                    </p>
+                    
+                    {% if blockchain_data.message %}
+                        <p>{{ blockchain_data.message }}</p>
+                    {% endif %}
+                    
+                    <div class="interpretation">
+                        {% if is_fake %}
+                            <p>⚠️ This video is not registered on blockchain and was detected as FAKE by AI.</p>
+                        {% else %}
+                            <p>📝 This video is not registered on blockchain but was detected as REAL by AI.</p>
+                            <p>You can register it as authentic on the blockchain from the home page.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                
+                <!-- Video Hash -->
+                <div class="hash-display">
+                    <strong>Video Hash (SHA-256):</strong><br>
+                    {{ blockchain_data.hash }}
+                </div>
+            </div>
+            
+            <!-- Combined Interpretation -->
+            <div class="combined-result" style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 5px;">
+                <h3>🔍 Final Verification Summary</h3>
+                
+                {% if not is_fake and blockchain_data.verified %}
+                    <p style="color: #28a745; font-weight: bold;">✅ DOUBLE VERIFIED: Video is REAL and REGISTERED on blockchain</p>
+                    <p>This video passes both AI authenticity check and blockchain verification.</p>
+                
+                {% elif not is_fake and not blockchain_data.verified %}
+                    <p style="color: #ffc107; font-weight: bold;">⚠️ AI VERIFIED ONLY: Video appears REAL but not on blockchain</p>
+                    <p>The AI detects it as real, but it's not registered on the blockchain yet.</p>
+                
+                {% elif is_fake and blockchain_data.verified %}
+                    <p style="color: #dc3545; font-weight: bold;">🚨 CONFLICT: AI detects as FAKE but video is registered on blockchain</p>
+                    <p>This could indicate either AI error or the registered video was manipulated.</p>
+                
+                {% elif is_fake and not blockchain_data.verified %}
+                    <p style="color: #dc3545; font-weight: bold;">❌ DOUBLE ALERT: Video detected as FAKE and not registered</p>
+                    <p>Both AI detection and blockchain verification suggest this video is not authentic.</p>
+                
+                {% endif %}
+            </div>
+            
+            <!-- Actions -->
+            <div class="actions" style="margin-top: 30px; text-align: center;">
+                <a href="{{ url_for('index') }}" class="btn">← Back to Home</a>
+                {% if not is_fake and not blockchain_data.verified and blockchain_connected %}
+                    <a href="{{ url_for('index') }}#register" class="btn btn-success">📝 Register on Blockchain</a>
+                {% endif %}
+            </div>
+
+            <!-- Add this section to result.html -->
+<div class="card" style="text-align: center; margin-top: 30px;">
+    <h3>📄 Generate Detailed Report</h3>
+    <p>Download a professional PDF report with complete analysis details</p>
+    
+    <a href="{{ url_for('generate_report', filename=filename) }}" 
+       class="btn" style="background: #17a2b8;">
+        📊 Generate PDF Report
+    </a>
+    
+    <p style="margin-top: 15px; font-size: 14px; color: #666;">
+        <small>Includes: AI analysis details, blockchain verification, timestamp, and recommendations</small>
+    </p>
+</div>
+        </div>
+    </div>
+</body>
+</html>

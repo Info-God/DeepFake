@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Blockchain Verification - Quick Check{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1><i class="fas fa-link"></i> Blockchain Verification</h1>
+        <p>Quickly verify if a video is registered on the blockchain</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="verify-container">
+        <div class="verify-card">
+            <div class="verify-header">
+                <div class="verify-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h2>Quick Blockchain Check</h2>
+                <p>No AI analysis - Just blockchain verification</p>
+            </div>
+            
+            <div class="verify-body">
+                <form action="{{ url_for('verify_only') }}" method="post" enctype="multipart/form-data" class="verify-form" id="verifyForm">
+                    <!-- File Upload -->
+                    <div class="file-upload-area verify-upload" id="verifyDropArea">
+                        <input type="file" name="video" id="verifyFileInput" accept="video/*" required hidden>
+                        
+                        <div class="upload-placeholder">
+                            <div class="placeholder-icon">
+                                <i class="fas fa-file-upload"></i>
+                            </div>
+                            <h3>Select Video File</h3>
+                            <p>Click to browse or drag & drop</p>
+                            <p class="file-types">Any video format supported</p>
+                        </div>
+                        
+                        <div class="file-preview" id="verifyFilePreview" style="display: none;">
+                            <div class="preview-icon">
+                                <i class="fas fa-file-video"></i>
+                            </div>
+                            <div class="preview-info">
+                                <h4 id="verifyFileName">File Name</h4>
+                                <p id="verifyFileSize">File Size</p>
+                                <button type="button" class="btn-remove" id="verifyRemoveFile">
+                                    <i class="fas fa-times"></i> Remove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Blockchain Info -->
+                    <div class="blockchain-info">
+                        <h3><i class="fas fa-info-circle"></i> How Blockchain Verification Works</h3>
+                        <div class="blockchain-steps">
+                            <div class="blockchain-step">
+                                <div class="step-icon"><i class="fas fa-hashtag"></i></div>
+                                <div class="step-content">
+                                    <h4>1. Generate Hash</h4>
+                                    <p>System creates SHA-256 hash of your video</p>
+                                </div>
+                            </div>
+                            <div class="blockchain-step">
+                                <div class="step-icon"><i class="fas fa-search"></i></div>
+                                <div class="step-content">
+                                    <h4>2. Check Blockchain</h4>
+                                    <p>Hash is searched in Ethereum smart contract</p>
+                                </div>
+                            </div>
+                            <div class="blockchain-step">
+                                <div class="step-icon"><i class="fas fa-check-circle"></i></div>
+                                <div class="step-content">
+                                    <h4>3. Get Results</h4>
+                                    <p>Immediate verification status</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Current Blockchain Status -->
+                    <div class="current-status">
+                        <h3><i class="fas fa-network-wired"></i> Current Blockchain Status</h3>
+                        <div class="status-display">
+                            <div class="status-item">
+                                <span class="status-label">Network:</span>
+                                <span class="status-value">Ethereum (Ganache Local)</span>
+                            </div>
+                            <div class="status-item">
+    <span class="status-label">Contract:</span>
+    <span class="status-value">
+        {% if contract_address %}
+            {{ contract_address[:20] }}...
+        {% else %}
+            <span class="text-muted">Not available</span>
+        {% endif %}
+    </span>
+</div>
+                            <div class="status-item">
+                                <span class="status-label">Registered Videos:</span>
+                                <span class="status-value">{{ stats.registered_count }}</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">Connection:</span>
+                                <span class="status-value {% if blockchain_connected %}connected{% else %}disconnected{% endif %}">
+                                    {% if blockchain_connected %}Connected{% else %}Disconnected{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="verify-action">
+                        <button type="submit" class="btn-secondary btn-large" id="verifySubmitBtn">
+                            <i class="fas fa-bolt"></i> Verify on Blockchain
+                        </button>
+                        <p class="verify-note">
+                            <i class="fas fa-clock"></i> Verification completes in seconds
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Similar JavaScript as upload page for file handling -->
+<script>
+    // Similar JavaScript as upload_video.html for file handling
+    // You can reuse the same code with different IDs
+</script>
+{% endblock %}

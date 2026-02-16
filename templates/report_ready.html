@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Generated</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .report-container {
+            text-align: center;
+            padding: 50px 20px;
+        }
+        
+        .report-icon {
+            font-size: 80px;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+        
+        .report-card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container report-container">
+        <div class="report-card">
+            <div class="report-icon">📄</div>
+            <h1>Report Generated Successfully!</h1>
+            <p>Your verification report for <strong>{{ filename }}</strong> is ready.</p>
+            
+            <div style="margin: 30px 0;">
+                <a href="{{ url_for('download_report', filename=report_path) }}" 
+                   class="btn btn-success" style="padding: 15px 30px; font-size: 18px;">
+                    ⬇️ Download PDF Report
+                </a>
+            </div>
+            
+            <p style="color: #666; margin-top: 20px;">
+                <small>The report contains detailed analysis and blockchain verification results.</small>
+            </p>
+            
+            <div class="nav-links" style="margin-top: 40px;">
+                <a href="{{ url_for('index') }}" class="btn">← Back to Home</a>
+                <a href="{{ url_for('upload_video') }}" class="btn">Upload Another Video</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

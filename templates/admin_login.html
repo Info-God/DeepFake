@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - DeepVerify System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Bar (Same as base.html) -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <!-- Logo -->
+            <div class="nav-logo">
+                <div class="logo-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-main">DeepVerify</span>
+                    <span class="logo-sub">AI + Blockchain</span>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <div class="nav-links">
+                <a href="{{ url_for('index') }}" class="nav-link">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="{{ url_for('upload_video_page') }}" class="nav-link">
+                    <i class="fas fa-video"></i> Detect
+                </a>
+                <a href="{{ url_for('verify_only_page') }}" class="nav-link">
+                    <i class="fas fa-link"></i> Verify
+                </a>
+                <a href="{{ url_for('admin_panel') }}" class="nav-link active">
+                    <i class="fas fa-cog"></i> Admin Panel
+                </a>
+            </div>
+
+            <!-- Right Side Actions -->
+            <div class="nav-actions">
+                <a href="{{ url_for('admin_logout') }}" class="btn-admin">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+                
+                <!-- Blockchain Status -->
+                <div class="blockchain-status">
+                    <div class="status-dot {% if blockchain_connected %}connected{% else %}disconnected{% endif %}"></div>
+                    <span>Blockchain {% if blockchain_connected %}Connected{% else %}Offline{% endif %}</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="container">
+                <h1><i class="fas fa-cog"></i> Admin Panel</h1>
+                <p>Manage blockchain registrations and system settings</p>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages container">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            <span class="alert-icon">
+                                {% if category == 'success' %}
+                                    <i class="fas fa-check-circle"></i>
+                                {% elif category == 'error' %}
+                                    <i class="fas fa-exclamation-circle"></i>
+                                {% else %}
+                                    <i class="fas fa-info-circle"></i>
+                                {% endif %}
+                            </span>
+                            <span class="alert-text">{{ message }}</span>
+                            <button class="alert-close">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="container">
+            <!-- Admin Stats -->
+            <div class="admin-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">{{ registered_videos|length }}</h3>
+                        <p class="stat-label">Videos Registered</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-link"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">
+                            {% if blockchain_connected and contract %}
+                                {{ stats.registered_count }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </h3>
+                        <p class="stat-label">On Blockchain</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-network-wired"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">
+                            {% if blockchain_connected %}✅{% else %}❌{% endif %}
+                        </h3>
+                        <p class="stat-label">Blockchain Status</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">Admin</h3>
+                        <p class="stat-label">Access Level</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Register New Video Card -->
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                    <div>
+                        <h2>Register New Video</h2>
+                        <p>Add authentic videos to the blockchain registry</p>
+                    </div>
+                </div>
+                
+                <div class="admin-card-body">
+                    <form action="{{ url_for('admin_register') }}" method="post" enctype="multipart/form-data" class="admin-form">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-video"></i> Select Video File
+                            </label>
+                            <div class="file-upload-area admin-upload">
+                                <input type="file" name="video" id="adminFileInput" accept="video/*" required hidden>
+                                <div class="upload-placeholder">
+                                    <div class="placeholder-icon">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                    </div>
+                                    <h3>Drag & Drop Video</h3>
+                                    <p>or click to browse</p>
+                                    <p class="file-types">MP4, AVI, MOV, MKV, WEBM</p>
+                                </div>
+                                <div class="file-preview" id="adminFilePreview" style="display: none;">
+                                    <div class="preview-icon">
+                                        <i class="fas fa-file-video"></i>
+                                    </div>
+                                    <div class="preview-info">
+                                        <h4 id="adminFileName">File Name</h4>
+                                        <p id="adminFileSize">File Size</p>
+                                        <button type="button" class="btn-remove" id="adminRemoveFile">
+                                            <i class="fas fa-times"></i> Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-align-left"></i> Description
+                            </label>
+                            <input type="text" name="description" 
+                                   class="form-input"
+                                   placeholder="E.g., Original News Clip - CNN, CEO Official Speech, Official Press Conference"
+                                   required>
+                            <p class="form-hint">This description will be permanently stored on the blockchain</p>
+                        </div>
+                        
+                        <div class="blockchain-info-card">
+                            <h3><i class="fas fa-info-circle"></i> Blockchain Information</h3>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">Network:</span>
+                                    <span class="info-value">Ethereum (Ganache)</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Contract:</span>
+                                    <span class="info-value">{{ contract_address[:15] }}...{{ contract_address[-15:] if contract_address else 'Not loaded' }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Status:</span>
+                                    <span class="info-value {% if blockchain_connected %}connected{% else %}disconnected{% endif %}">
+                                        {% if blockchain_connected %}Connected{% else %}Disconnected{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary btn-large">
+                                <i class="fas fa-link"></i> Register on Blockchain
+                            </button>
+                            <p class="form-note">
+                                <i class="fas fa-shield-alt"></i> This will store the video's SHA-256 hash permanently on the blockchain
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Registered Videos List -->
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <div class="admin-card-icon">
+                        <i class="fas fa-list"></i>
+                    </div>
+                    <div>
+                        <h2>Registered Videos</h2>
+                        <p>All videos registered on the blockchain</p>
+                    </div>
+                </div>
+                
+                <div class="admin-card-body">
+                    {% if registered_videos %}
+                        <div class="registered-videos-grid">
+                            {% for video in registered_videos %}
+                            <div class="registered-video-card">
+                                <div class="video-card-header">
+                                    <div class="video-icon">
+                                        <i class="fas fa-video"></i>
+                                    </div>
+                                    <div class="video-info">
+                                        <h3>{{ video.description }}</h3>
+                                        <div class="video-meta">
+                                            <span class="meta-item">
+                                                <i class="fas fa-calendar"></i> {{ video.registered_date }}
+                                            </span>
+                                            <span class="meta-item">
+                                                <i class="fas fa-user"></i> {{ video.uploader[:8] }}...{{ video.uploader[-6:] }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="video-card-body">
+                                    <div class="hash-display">
+                                        <label>Video Hash (SHA-256):</label>
+                                        <code class="hash-code">{{ video.hash[:20] }}...{{ video.hash[-20:] }}</code>
+                                    </div>
+                                    
+                                    <div class="verification-badge verified">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Blockchain Verified</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <i class="fas fa-video-slash"></i>
+                            </div>
+                            <h3>No Videos Registered Yet</h3>
+                            <p>Register your first video using the form above</p>
+                            <p class="empty-subtext">Once registered, videos will appear here with their blockchain verification details.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Admin Actions -->
+            <div class="admin-actions">
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <h3>Blockchain Management</h3>
+                    <p>Manage smart contracts and blockchain connections</p>
+                    <button class="btn-secondary" disabled>
+                        <i class="fas fa-cog"></i> Coming Soon
+                    </button>
+                </div>
+                
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3>System Analytics</h3>
+                    <p>View usage statistics and system performance</p>
+                    <button class="btn-secondary" disabled>
+                        <i class="fas fa-chart-line"></i> Coming Soon
+                    </button>
+                </div>
+                
+                <div class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>User Management</h3>
+                    <p>Manage user accounts and permissions</p>
+                    <button class="btn-secondary" disabled>
+                        <i class="fas fa-user-cog"></i> Coming Soon
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="admin-navigation">
+                <a href="{{ url_for('index') }}" class="btn">
+                    <i class="fas fa-arrow-left"></i> Back to Main Page
+                </a>
+                <a href="{{ url_for('admin_logout') }}" class="btn btn-danger">
+                    <i class="fas fa-sign-out-alt"></i> Logout Admin
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3><i class="fas fa-shield-alt"></i> DeepVerify Admin</h3>
+                <p>Secure blockchain video registration system for content authentication.</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Admin Functions</h3>
+                <a href="#register">Register Videos</a>
+                <a href="#manage">Manage Blockchain</a>
+                <a href="#analytics">View Analytics</a>
+                <a href="#settings">System Settings</a>
+            </div>
+            
+            <div class="footer-section">
+                <h3>System Status</h3>
+                <span>Blockchain: {% if blockchain_connected %}Online{% else %}Offline{% endif %}</span>
+                <span>AI Model: Active</span>
+                <span>Storage: Available</span>
+                <span>Security: Enabled</span>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Admin Panel</h3>
+                <p>Restricted Access Area</p>
+                <p>For authorized personnel only</p>
+                <p>Secure video registration system</p>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2024 DeepVerify - Admin Panel. Authorized access only. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript for File Upload -->
+    <script>
+        const adminFileInput = document.getElementById('adminFileInput');
+        const adminFilePreview = document.getElementById('adminFilePreview');
+        const adminFileName = document.getElementById('adminFileName');
+        const adminFileSize = document.getElementById('adminFileSize');
+        const adminRemoveFile = document.getElementById('adminRemoveFile');
+        const adminUploadArea = document.querySelector('.admin-upload');
+        
+        // Click to browse
+        adminUploadArea.addEventListener('click', () => adminFileInput.click());
+        
+        // File selection
+        adminFileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                updateFilePreview(file);
+            }
+        });
+        
+        // Drag and drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            adminUploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            adminUploadArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            adminUploadArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            adminUploadArea.classList.add('highlight');
+        }
+        
+        function unhighlight() {
+            adminUploadArea.classList.remove('highlight');
+        }
+        
+        adminUploadArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                adminFileInput.files = files;
+                updateFilePreview(files[0]);
+            }
+        }
+        
+        function updateFilePreview(file) {
+            // Validate file type
+            const validTypes = ['video/mp4', 'video/avi', 'video/quicktime', 'video/x-matroska', 'video/webm'];
+            if (!validTypes.includes(file.type)) {
+                alert('Please upload a valid video file (MP4, AVI, MOV, MKV, WEBM)');
+                return;
+            }
+            
+            // Update preview
+            adminFileName.textContent = file.name;
+            adminFileSize.textContent = formatFileSize(file.size);
+            adminFilePreview.style.display = 'flex';
+            adminUploadArea.querySelector('.upload-placeholder').style.display = 'none';
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' bytes';
+            else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            else return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+        
+        // Remove file
+        adminRemoveFile.addEventListener('click', function() {
+            adminFileInput.value = '';
+            adminFilePreview.style.display = 'none';
+            adminUploadArea.querySelector('.upload-placeholder').style.display = 'block';
+        });
+    </script>
+</body>
+</html>

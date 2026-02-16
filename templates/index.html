@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Deepfake Detection System{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-container">
+        <div class="hero-content">
+            <h1 class="hero-title">Detect Deepfakes with <span class="highlight">AI</span> & Verify with <span class="highlight">Blockchain</span></h1>
+            <p class="hero-subtitle">A dual-layer security system that combines artificial intelligence detection with immutable blockchain verification for complete media authentication.</p>
+            
+            <div class="hero-actions">
+                <a href="{{ url_for('upload_video_page') }}" class="btn-primary">
+                    <i class="fas fa-video"></i> Start Detection
+                </a>
+                <a href="{{ url_for('verify_only_page') }}" class="btn-secondary">
+                    <i class="fas fa-link"></i> Blockchain Verify
+                </a>
+            </div>
+        </div>
+        
+        <div class="hero-image">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h3>AI Detection</h3>
+                <p>Deep learning models analyze video frames</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-link"></i>
+                </div>
+                <h3>Blockchain Verify</h3>
+                <p>Immutable records on Ethereum blockchain</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Dual Security</h3>
+                <p>Two-layer verification system</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+    <div class="container">
+        <h2 class="section-title">How It Works</h2>
+        <p class="section-subtitle">Our system provides comprehensive video authentication</p>
+        
+        <div class="features-grid">
+            <div class="feature-step">
+                <div class="step-number">1</div>
+                <div class="step-icon">
+                    <i class="fas fa-upload"></i>
+                </div>
+                <h3>Upload Video</h3>
+                <p>Upload any video file for analysis. Supports MP4, AVI, MOV, and other formats.</p>
+            </div>
+            
+            <div class="feature-step">
+                <div class="step-number">2</div>
+                <div class="step-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h3>AI Analysis</h3>
+                <p>EfficientNet model analyzes frames to detect manipulation patterns with high accuracy.</p>
+            </div>
+            
+            <div class="feature-step">
+                <div class="step-number">3</div>
+                <div class="step-icon">
+                    <i class="fas fa-cube"></i>
+                </div>
+                <h3>Blockchain Check</h3>
+                <p>System generates SHA-256 hash and checks Ethereum blockchain for registration.</p>
+            </div>
+            
+            <div class="feature-step">
+                <div class="step-number">4</div>
+                <div class="step-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <h3>Get Results</h3>
+                <p>Receive detailed report with AI confidence and blockchain verification status.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-video"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">100+</h3>
+                    <p class="stat-label">Videos Analyzed</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">95%</h3>
+                    <p class="stat-label">AI Accuracy</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-link"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ stats.registered_count }}</h3>
+                    <p class="stat-label">Videos on Blockchain</p>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">&lt; 2 min</h3>
+                    <p class="stat-label">Analysis Time</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Upload Options Section -->
+<section class="upload-section">
+    <div class="container">
+        <h2 class="section-title">Get Started</h2>
+        <p class="section-subtitle">Choose your verification method</p>
+        
+        <div class="upload-options">
+            <!-- Full Analysis Option -->
+            <div class="upload-option full-analysis">
+                <div class="option-header">
+                    <div class="option-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3>Full Analysis</h3>
+                    <p class="option-tag">AI + Blockchain</p>
+                </div>
+                
+                <div class="option-content">
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> AI Deepfake Detection</li>
+                        <li><i class="fas fa-check"></i> Blockchain Verification</li>
+                        <li><i class="fas fa-check"></i> Detailed PDF Report</li>
+                        <li><i class="fas fa-check"></i> Frame-by-Frame Analysis</li>
+                    </ul>
+                    
+                    <div class="option-action">
+                        <a href="{{ url_for('upload_video_page') }}" class="btn-primary">
+                            <i class="fas fa-play"></i> Start Full Analysis
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Blockchain Only Option -->
+            <div class="upload-option blockchain-only">
+                <div class="option-header">
+                    <div class="option-icon">
+                        <i class="fas fa-link"></i>
+                    </div>
+                    <h3>Blockchain Verify</h3>
+                    <p class="option-tag">Quick Check</p>
+                </div>
+                
+                <div class="option-content">
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> SHA-256 Hash Generation</li>
+                        <li><i class="fas fa-check"></i> Blockchain Registration Check</li>
+                        <li><i class="fas fa-check"></i> Fast Verification</li>
+                        <li><i class="fas fa-check"></i> No AI Processing</li>
+                    </ul>
+                    
+                    <div class="option-action">
+                        <a href="{{ url_for('verify_only_page') }}" class="btn-secondary">
+                            <i class="fas fa-bolt"></i> Quick Verify
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Admin Panel Option -->
+            <div class="upload-option admin-panel">
+                <div class="option-header">
+                    <div class="option-icon">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <h3>Admin Panel</h3>
+                    <p class="option-tag">Content Registration</p>
+                </div>
+                
+                <div class="option-content">
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Register Videos</li>
+                        <li><i class="fas fa-check"></i> Manage Blockchain Records</li>
+                        <li><i class="fas fa-check"></i> View All Registrations</li>
+                        <li><i class="fas fa-check"></i> System Monitoring</li>
+                    </ul>
+                    
+                    <div class="option-action">
+                        <a href="{{ url_for('admin_login') }}" class="btn-admin">
+                            <i class="fas fa-lock"></i> Access Admin Panel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="about-section">
+    <div class="container">
+        <div class="about-content">
+            <div class="about-text">
+                <h2 class="section-title">About This Project</h2>
+                <p>This Deepfake Detection & Blockchain Verification System is a final year academic project that addresses the growing challenge of video authenticity verification in the age of AI-generated content.</p>
+                
+                <div class="tech-stack">
+                    <h3>Technology Stack</h3>
+                    <div class="tech-icons">
+                        <div class="tech-item">
+                            <i class="fab fa-python"></i>
+                            <span>Python Flask</span>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fas fa-brain"></i>
+                            <span>PyTorch AI</span>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fab fa-ethereum"></i>
+                            <span>Ethereum</span>
+                        </div>
+                        <div class="tech-item">
+                            <i class="fas fa-database"></i>
+                            <span>Web3.py</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="about-image">
+                <div class="system-architecture">
+                    <div class="arch-layer">
+                        <div class="arch-icon"><i class="fas fa-desktop"></i></div>
+                        <h4>Frontend</h4>
+                        <p>User Interface</p>
+                    </div>
+                    <div class="arch-arrow">↓</div>
+                    <div class="arch-layer">
+                        <div class="arch-icon"><i class="fas fa-robot"></i></div>
+                        <h4>AI Layer</h4>
+                        <p>Deepfake Detection</p>
+                    </div>
+                    <div class="arch-arrow">↓</div>
+                    <div class="arch-layer">
+                        <div class="arch-icon"><i class="fas fa-cube"></i></div>
+                        <h4>Blockchain</h4>
+                        <p>Verification Layer</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
