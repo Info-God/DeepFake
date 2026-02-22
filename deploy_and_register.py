@@ -3,7 +3,10 @@ import json
 from solcx import compile_standard, install_solc
 from utils import file_sha256
 import sys, os
+from dotenv import load_dotenv
 
+# Load environment variables from .env file
+load_dotenv()
 # Install Solidity compiler if not already
 install_solc("0.8.0")
 

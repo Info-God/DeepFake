@@ -1,92 +1,561 @@
-<!-- templates/admin.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Register Videos</title>
-    <style>
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .upload-section {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            margin: 20px 0;
-        }
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            text-decoration: none;
-            margin: 5px;
-        }
-        .btn-success {
-            background: #28a745;
-        }
-        .video-list {
-            margin-top: 20px;
-        }
-        .video-item {
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 5px;
-        }
-    </style>
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block title %}Admin Panel - Video Registration{% endblock %}
+
+{% block content %}
+<div class="page-header">
     <div class="container">
-        <h1>🔐 Admin Panel - Register Videos on Blockchain</h1>
-        
-        <div class="upload-section">
-            <h2>📝 Register New Video</h2>
-            
-            <form action="{{ url_for('admin_register') }}" method="post" enctype="multipart/form-data">
-                <label>Select Video:</label>
-                <input type="file" name="video" accept="video/*" required>
-                <br><br>
-                
-                <label>Description:</label>
-                <input type="text" name="description" placeholder="E.g., Original News Clip - CNN" style="width: 100%; padding: 8px; margin: 10px 0;">
-                <br><br>
-                
-                <button type="submit" class="btn btn-success">✅ Register on Blockchain</button>
-            </form>
-            
-            <p><small>This will register the video as authentic on the blockchain</small></p>
-        </div>
-        
-        <div class="upload-section">
-            <h2>📋 Already Registered Videos</h2>
-            
-            <div class="video-list">
-                {% if registered_videos %}
-                    {% for video in registered_videos %}
-                    <div class="video-item">
-                        <strong>{{ video.description }}</strong><br>
-                        <small>Hash: {{ video.hash[:20] }}...{{ video.hash[-20:] }}</small><br>
-                        <small>Registered by: {{ video.uploader[:10] }}...</small><br>
-                        <small>Date: {{ video.registered_date }}</small>
+        <h1><i class="fas fa-crown"></i> Admin Panel</h1>
+        <p>Register authentic videos on the blockchain</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="admin-grid">
+        <!-- Main Admin Card -->
+        <div class="admin-main">
+            <!-- Registration Card -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <div class="header-icon">
+                        <i class="fas fa-upload"></i>
                     </div>
-                    {% endfor %}
-                {% else %}
-                    <p>No videos registered yet.</p>
-                {% endif %}
+                    <h2>Register New Video</h2>
+                    <p class="text-muted">Upload authentic videos to the blockchain registry</p>
+                </div>
+                
+                <div class="card-body">
+                    <form action="{{ url_for('admin_register') }}" method="post" enctype="multipart/form-data" class="admin-form">
+                        <!-- File Upload -->
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-video"></i>
+                                Select Video File
+                            </label>
+                            <div class="file-input-wrapper">
+                                <input type="file" name="video" id="videoFile" accept="video/*" required hidden>
+                                <button type="button" class="btn-file" onclick="document.getElementById('videoFile').click()">
+                                    <i class="fas fa-folder-open"></i> Choose Video
+                                </button>
+                                <span class="file-name" id="fileName">No file chosen</span>
+                            </div>
+                            <small class="form-text">Supported: MP4, AVI, MOV, MKV, WEBM (Max 500MB)</small>
+                        </div>
+                        
+                        <!-- Description -->
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-tag"></i>
+                                Video Description
+                            </label>
+                            <input type="text" 
+                                   name="description" 
+                                   placeholder="E.g., Original News Clip - CNN Interview" 
+                                   required>
+                            <small class="form-text">Brief description of the video content</small>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn-register">
+                            <i class="fas fa-link"></i> Register on Blockchain
+                        </button>
+                    </form>
+                    
+                    <div class="warning-note">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>This action will create a permanent record on the blockchain. Gas fees will be incurred.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Registered Videos List -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <div class="header-icon">
+                        <i class="fas fa-list"></i>
+                    </div>
+                    <h2>Registered Videos</h2>
+                    <p class="text-muted">Recently added videos on the blockchain</p>
+                </div>
+                
+                <div class="card-body">
+                    {% if registered_videos %}
+                        <div class="videos-list">
+                            {% for video in registered_videos %}
+                            <div class="video-item">
+                                <div class="video-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="video-details">
+                                    <h4>{{ video.description }}</h4>
+                                    <div class="video-meta">
+                                        <span class="hash">
+                                            <i class="fas fa-hashtag"></i>
+                                            {{ video.hash[:15] }}...{{ video.hash[-10:] }}
+                                        </span>
+                                        <span class="uploader">
+                                            <i class="fas fa-user"></i>
+                                            {{ video.uploader[:8] }}...
+                                        </span>
+                                        <span class="date">
+                                            <i class="fas fa-calendar"></i>
+                                            {{ video.registered_date }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-database"></i>
+                            <h3>No Videos Registered</h3>
+                            <p>Start by registering your first authentic video</p>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
         
-        <div style="text-align: center; margin-top: 30px;">
-            <a href="{{ url_for('index') }}" class="btn">← Back to Main Page</a>
+        <!-- Sidebar -->
+        <div class="admin-sidebar">
+            <!-- Stats Card -->
+            <div class="info-card">
+                <h3><i class="fas fa-chart-bar"></i> Registry Stats</h3>
+                <div class="stats-list">
+                    <div class="stat-row">
+                        <span class="stat-label">Total Registered:</span>
+                        <span class="stat-number">{{ stats.registered_count if stats.registered_count else 0 }}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Blockchain:</span>
+                        <span class="stat-badge {% if blockchain_connected %}active{% else %}inactive{% endif %}">
+                            {% if blockchain_connected %}Connected{% else %}Offline{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contract Info -->
+            <div class="info-card">
+                <h3><i class="fas fa-file-contract"></i> Contract Details</h3>
+                <div class="contract-details">
+                    <p>
+                        <span class="label">Address:</span>
+                        <code>{{ contract_address if contract_address else 'Not deployed' }}</code>
+                    </p>
+                    <p>
+                        <span class="label">Network:</span>
+                        <span>Ethereum (Ganache)</span>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Admin Actions -->
+            <div class="info-card">
+                <h3><i class="fas fa-cog"></i> Admin Actions</h3>
+                <div class="admin-actions">
+                    <a href="{{ url_for('admin_logout') }}" class="action-link logout">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                    <a href="{{ url_for('index') }}" class="action-link">
+                        <i class="fas fa-home"></i> Back to Home
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
-</body>
-</html>
+</div>
+
+<script>
+document.getElementById('videoFile').addEventListener('change', function(e) {
+    const fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
+    document.getElementById('fileName').textContent = fileName;
+});
+</script>
+
+<style>
+.admin-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+    padding: 24px 0;
+}
+
+.admin-main {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.admin-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 24px 24px 16px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.header-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.header-icon i {
+    font-size: 24px;
+    color: white;
+}
+
+.card-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 4px;
+}
+
+.card-body {
+    padding: 24px;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #4a5568;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.form-group label i {
+    color: #667eea;
+    margin-right: 5px;
+}
+
+.file-input-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn-file {
+    padding: 10px 16px;
+    background: #edf2f7;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    color: #4a5568;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-file:hover {
+    background: #e2e8f0;
+    border-color: #cbd5e1;
+}
+
+.file-name {
+    color: #718096;
+    font-size: 14px;
+}
+
+.form-group input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.form-group input[type="text"]:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+}
+
+.form-text {
+    display: block;
+    margin-top: 5px;
+    color: #a0aec0;
+    font-size: 12px;
+}
+
+.btn-register {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+    margin-bottom: 16px;
+}
+
+.btn-register:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(72,187,120,0.3);
+}
+
+.warning-note {
+    display: flex;
+    gap: 10px;
+    padding: 12px;
+    background: #fef5e7;
+    border-radius: 8px;
+    border-left: 4px solid #f6ad55;
+}
+
+.warning-note i {
+    color: #f6ad55;
+    font-size: 18px;
+}
+
+.warning-note p {
+    margin: 0;
+    font-size: 13px;
+    color: #744210;
+}
+
+/* Videos List */
+.videos-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.video-item {
+    display: flex;
+    gap: 15px;
+    padding: 15px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+}
+
+.video-icon i {
+    font-size: 24px;
+    color: #48bb78;
+}
+
+.video-details {
+    flex: 1;
+}
+
+.video-details h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 8px;
+}
+
+.video-meta {
+    display: flex;
+    gap: 15px;
+    font-size: 12px;
+    color: #718096;
+    flex-wrap: wrap;
+}
+
+.video-meta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.empty-state i {
+    font-size: 48px;
+    color: #cbd5e0;
+    margin-bottom: 16px;
+}
+
+.empty-state h3 {
+    font-size: 18px;
+    color: #4a5568;
+    margin: 0 0 8px;
+}
+
+.empty-state p {
+    color: #a0aec0;
+    margin: 0;
+}
+
+/* Sidebar */
+.admin-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.info-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.info-card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.stats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-label {
+    color: #718096;
+    font-size: 13px;
+}
+
+.stat-number {
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 18px;
+}
+
+.stat-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.stat-badge.active {
+    background: #c6f6d5;
+    color: #22543d;
+}
+
+.stat-badge.inactive {
+    background: #fed7d7;
+    color: #742a2a;
+}
+
+.contract-details p {
+    margin: 8px 0;
+    font-size: 13px;
+    color: #4a5568;
+}
+
+.contract-details .label {
+    color: #718096;
+    display: inline-block;
+    width: 70px;
+}
+
+.contract-details code {
+    background: #edf2f7;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.admin-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.action-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: #f7fafc;
+    border-radius: 8px;
+    color: #4a5568;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.action-link:hover {
+    background: #edf2f7;
+}
+
+.action-link.logout {
+    color: #e53e3e;
+}
+
+.action-link.logout:hover {
+    background: #fee;
+}
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.alert-error {
+    background: #fee;
+    color: #c53030;
+    border-left: 4px solid #f56565;
+}
+
+.alert-success {
+    background: #e6fffa;
+    color: #2c7a7b;
+    border-left: 4px solid #38b2ac;
+}
+
+@media (max-width: 768px) {
+    .admin-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

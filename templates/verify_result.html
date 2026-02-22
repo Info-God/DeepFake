@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block title %}Blockchain Verification Result{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1><i class="fas fa-link"></i> Blockchain Verification Result</h1>
+        <p>Verification completed for {{ filename }}</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="result-container">
+        <!-- Main Result Card -->
+        <div class="result-card {% if blockchain_data.verified %}verified{% else %}unverified{% endif %}">
+            <div class="result-icon">
+                {% if blockchain_data.verified %}
+                    <i class="fas fa-check-circle"></i>
+                {% else %}
+                    <i class="fas fa-times-circle"></i>
+                {% endif %}
+            </div>
+            
+            <h2 class="result-title">
+                {% if blockchain_data.verified %}
+                    ✓ Video Verified on Blockchain
+                {% else %}
+                    ✗ Video Not Found on Blockchain
+                {% endif %}
+            </h2>
+            
+            <p class="result-message">
+                {% if blockchain_data.verified %}
+                    This video has been registered and verified on the Ethereum blockchain.
+                {% elif blockchain_data.error %}
+                    Error: {{ blockchain_data.error }}
+                {% else %}
+                    {{ blockchain_data.message }}
+                {% endif %}
+            </p>
+            
+            <!-- Video Hash -->
+            <div class="hash-display">
+                <div class="hash-label">SHA-256 Hash</div>
+                <code class="hash-value">{{ blockchain_data.hash }}</code>
+            </div>
+            
+            {% if blockchain_data.verified %}
+            <!-- Blockchain Details -->
+            <div class="details-grid">
+                <div class="detail-item">
+                    <div class="detail-label">Description</div>
+                    <div class="detail-value">{{ blockchain_data.description }}</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">Uploader Address</div>
+                    <div class="detail-value">{{ blockchain_data.uploader[:10] }}...{{ blockchain_data.uploader[-8:] }}</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">Registration Date</div>
+                    <div class="detail-value">{{ blockchain_data.registered_date }}</div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-label">Blockchain Timestamp</div>
+                    <div class="detail-value">{{ blockchain_data.timestamp }}</div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Contract Info -->
+            <div class="contract-info">
+                <p>
+                    <i class="fas fa-file-contract"></i>
+                    <span>Contract: {{ contract_address[:15] }}...{{ contract_address[-10:] if contract_address else 'Not available' }}</span>
+                </p>
+                <p>
+                    <i class="fas fa-network-wired"></i>
+                    <span>Network: Ethereum (Ganache) - Chain ID: 1337</span>
+                </p>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <a href="{{ url_for('verify_only_page') }}" class="btn-verify-another">
+                <i class="fas fa-redo"></i> Verify Another Video
+            </a>
+            <a href="{{ url_for('index') }}" class="btn-home">
+                <i class="fas fa-home"></i> Back to Home
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.result-container {
+    max-width: 800px;
+    margin: 40px auto;
+}
+
+.result-card {
+    background: white;
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    margin-bottom: 30px;
+    border-left: 6px solid;
+    transition: transform 0.2s;
+}
+
+.result-card.verified {
+    border-left-color: #10b981;
+    background: linear-gradient(to bottom, #ffffff, #f0fdf4);
+}
+
+.result-card.unverified {
+    border-left-color: #ef4444;
+    background: linear-gradient(to bottom, #ffffff, #fef2f2);
+}
+
+.result-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+}
+
+.verified .result-icon i {
+    color: #10b981;
+    filter: drop-shadow(0 4px 6px rgba(16, 185, 129, 0.2));
+}
+
+.unverified .result-icon i {
+    color: #ef4444;
+    filter: drop-shadow(0 4px 6px rgba(239, 68, 68, 0.2));
+}
+
+.result-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 15px;
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.result-message {
+    color: #64748b;
+    margin-bottom: 30px;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.hash-display {
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 30px;
+    text-align: left;
+    border: 1px solid #e2e8f0;
+}
+
+.hash-label {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.hash-value {
+    font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+    font-size: 14px;
+    color: #0f172a;
+    word-break: break-all;
+    background: #ffffff;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    display: block;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 30px;
+    text-align: left;
+}
+
+.detail-item {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.detail-label {
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.detail-value {
+    font-size: 14px;
+    color: #0f172a;
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.contract-info {
+    background: #f1f5f9;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: left;
+    border: 1px solid #cbd5e1;
+}
+
+.contract-info p {
+    margin: 8px 0;
+    color: #334155;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.contract-info i {
+    color: #667eea;
+    width: 18px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+}
+
+.btn-verify-another {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 14px 28px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    border: none;
+    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+}
+
+.btn-verify-another:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-home {
+    background: white;
+    color: #4a5568;
+    padding: 14px 28px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    border: 2px solid #e2e8f0;
+}
+
+.btn-home:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+@media (max-width: 640px) {
+    .details-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .result-card {
+        padding: 30px 20px;
+    }
+}
+</style>
+{% endblock %}

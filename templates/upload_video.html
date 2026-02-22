@@ -5,225 +5,780 @@
 {% block content %}
 <div class="page-header">
     <div class="container">
-        <h1><i class="fas fa-search"></i> Deepfake Detection Analysis</h1>
-        <p>Upload a video for comprehensive AI analysis and blockchain verification</p>
+        <h1><i class="fas fa-microchip"></i> AI Deepfake Detection</h1>
+        <p>Upload video for comprehensive AI analysis & blockchain verification</p>
     </div>
 </div>
 
 <div class="container">
-    <div class="upload-container">
-        <div class="upload-card">
-            <div class="upload-header">
-                <div class="upload-icon">
-                    <i class="fas fa-video"></i>
+    <!-- Main Upload Section -->
+    <div class="upload-grid">
+        <!-- Left Column - Upload Form -->
+        <div class="upload-main">
+            <div class="upload-card">
+                <div class="card-header">
+                    <div class="header-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h2>Upload Video File</h2>
+                    <p class="text-muted">MP4, AVI, MOV, MKV or WEBM (Max 500MB)</p>
                 </div>
-                <h2>Upload Video for Full Analysis</h2>
-                <p>AI Detection + Blockchain Verification + Detailed Report</p>
+                
+                <div class="card-body">
+                    <form action="{{ url_for('upload_video') }}" method="post" enctype="multipart/form-data" id="uploadForm">
+                        <!-- File Upload Area -->
+                        <div class="file-dropzone" id="dropZone">
+                            <input type="file" name="video" id="fileInput" accept="video/*" hidden>
+                            
+                            <!-- Default State -->
+                            <div class="dropzone-default" id="defaultState">
+                                <i class="fas fa-film"></i>
+                                <h3>Drag & drop your video</h3>
+                                <p>or <span class="browse-link">click to browse</span></p>
+                                <small>Supported formats: MP4, AVI, MOV, MKV, WEBM</small>
+                            </div>
+                            
+                            <!-- Preview State -->
+                            <div class="dropzone-preview" id="previewState" style="display: none;">
+                                <div class="file-info">
+                                    <i class="fas fa-check-circle"></i>
+                                    <div class="file-details">
+                                        <span class="filename" id="fileName"></span>
+                                        <span class="filesize" id="fileSize"></span>
+                                    </div>
+                                    <button type="button" class="btn-remove" id="removeFile">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="file-ready">
+                                    <span class="ready-badge">Ready for analysis</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Options -->
+                        <div class="options-panel">
+                            <h4><i class="fas fa-sliders-h"></i> Analysis Preferences</h4>
+                            <div class="options-grid">
+                                <label class="option-chip">
+                                    <input type="checkbox" name="generate_report" checked hidden>
+                                    <span class="chip">
+                                        <i class="fas fa-file-pdf"></i> PDF Report
+                                    </span>
+                                </label>
+                                <label class="option-chip">
+                                    <input type="checkbox" name="detailed_view" checked hidden>
+                                    <span class="chip">
+                                        <i class="fas fa-chart-bar"></i> Detailed Results
+                                    </span>
+                                </label>
+                                <label class="option-chip">
+                                    <input type="checkbox" name="blockchain_check" checked hidden>
+                                    <span class="chip">
+                                        <i class="fas fa-link"></i> Blockchain Verify
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn-analyze" id="submitBtn" disabled>
+                            <span class="btn-text">
+                                <i class="fas fa-search"></i> Start Deepfake Analysis
+                            </span>
+                            <span class="btn-loading" style="display: none;">
+                                <i class="fas fa-spinner fa-spin"></i> Analyzing...
+                            </span>
+                        </button>
+                    </form>
+                </div>
             </div>
             
-            <div class="upload-body">
-                <form action="{{ url_for('upload_video') }}" method="post" enctype="multipart/form-data" class="upload-form" id="uploadForm">
-                    <!-- File Upload Area -->
-                    <div class="file-upload-area" id="dropArea">
-                        <input type="file" name="video" id="fileInput" accept="video/*" required hidden>
-                        
-                        <div class="upload-placeholder">
-                            <div class="placeholder-icon">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                            </div>
-                            <h3>Drag & Drop Video File</h3>
-                            <p>or click to browse</p>
-                            <p class="file-types">Supported: MP4, AVI, MOV, MKV, WEBM</p>
-                            <p class="file-limit">Max size: 500MB</p>
-                        </div>
-                        
-                        <div class="file-preview" id="filePreview" style="display: none;">
-                            <div class="preview-icon">
-                                <i class="fas fa-file-video"></i>
-                            </div>
-                            <div class="preview-info">
-                                <h4 id="fileName">File Name</h4>
-                                <p id="fileSize">File Size</p>
-                                <button type="button" class="btn-remove" id="removeFile">
-                                    <i class="fas fa-times"></i> Remove
-                                </button>
-                            </div>
+            <!-- Process Timeline -->
+            <div class="timeline-card">
+                <h3><i class="fas fa-clock"></i> Analysis Process</h3>
+                <div class="timeline">
+                    <div class="timeline-step">
+                        <div class="step-marker">1</div>
+                        <div class="step-content">
+                            <h4>Frame Extraction</h4>
+                            <p>Extract key frames from video for analysis</p>
                         </div>
                     </div>
-                    
-                    <!-- Upload Options -->
-                    <div class="upload-options">
-                        <h3><i class="fas fa-cog"></i> Analysis Options</h3>
-                        
-                        <div class="option-group">
-                            <label class="option-item">
-                                <input type="checkbox" name="generate_report" checked>
-                                <span class="option-checkbox"></span>
-                                <span class="option-text">Generate Detailed PDF Report</span>
-                            </label>
-                            
-                            <label class="option-item">
-                                <input type="checkbox" name="notify_complete" checked>
-                                <span class="option-checkbox"></span>
-                                <span class="option-text">Show detailed results page</span>
-                            </label>
-                            
-                            <label class="option-item">
-                                <input type="checkbox" name="store_session">
-                                <span class="option-checkbox"></span>
-                                <span class="option-text">Keep results in session</span>
-                            </label>
+                    <div class="timeline-step">
+                        <div class="step-marker">2</div>
+                        <div class="step-content">
+                            <h4>AI Model Inference</h4>
+                            <p>EfficientNet-B0 analyzes each frame for manipulation</p>
                         </div>
                     </div>
-                    
-                    <!-- Analysis Information -->
-                    <div class="analysis-info">
-                        <h3><i class="fas fa-info-circle"></i> What happens next?</h3>
-                        <div class="info-steps">
-                            <div class="info-step">
-                                <div class="step-number">1</div>
-                                <div class="step-content">
-                                    <h4>AI Analysis</h4>
-                                    <p>Video frames are extracted and analyzed by our EfficientNet model</p>
-                                </div>
-                            </div>
-                            <div class="info-step">
-                                <div class="step-number">2</div>
-                                <div class="step-content">
-                                    <h4>Blockchain Verification</h4>
-                                    <p>SHA-256 hash is generated and checked against Ethereum blockchain</p>
-                                </div>
-                            </div>
-                            <div class="info-step">
-                                <div class="step-number">3</div>
-                                <div class="step-content">
-                                    <h4>Results & Report</h4>
-                                    <p>Get detailed analysis results and optional PDF report</p>
-                                </div>
-                            </div>
+                    <div class="timeline-step">
+                        <div class="step-marker">3</div>
+                        <div class="step-content">
+                            <h4>Blockchain Verification</h4>
+                            <p>Check video hash against Ethereum registry</p>
                         </div>
                     </div>
-                    
-                    <!-- Submit Button -->
-                    <div class="upload-action">
-                        <button type="submit" class="btn-primary btn-large" id="submitBtn">
-                            <i class="fas fa-play"></i> Start Analysis
-                        </button>
-                        <p class="upload-note">
-                            <i class="fas fa-clock"></i> Analysis typically takes 1-2 minutes depending on video length
-                        </p>
+                    <div class="timeline-step">
+                        <div class="step-marker">4</div>
+                        <div class="step-content">
+                            <h4>Report Generation</h4>
+                            <p>Create comprehensive verification report</p>
+                        </div>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
         
-        <!-- Side Information -->
-        <div class="side-info">
+        <!-- Right Column - Information Panels -->
+        <div class="upload-sidebar">
+            <!-- Stats Card -->
+            <div class="info-card stats-card">
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-value">95%</span>
+                        <span class="stat-label">Detection Accuracy</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-value">30fps</span>
+                        <span class="stat-label">Frame Analysis</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-value">SHA-256</span>
+                        <span class="stat-label">Blockchain Hash</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Blockchain Status Card -->
             <div class="info-card">
-                <h3><i class="fas fa-robot"></i> AI Detection Technology</h3>
-                <p>Our system uses EfficientNet-B0, a state-of-the-art convolutional neural network trained to detect subtle manipulation patterns in videos.</p>
-                <ul>
-                    <li>Frame-by-frame analysis</li>
-                    <li>Facial feature detection</li>
-                    <li>Temporal consistency checking</li>
-                    <li>95%+ accuracy rate</li>
+                <div class="card-title">
+                    <i class="fas fa-link"></i>
+                    <h3>Blockchain Status</h3>
+                </div>
+                <div class="status-display">
+                    <div class="status-item">
+                        <span class="status-label">Network</span>
+                        <span class="status-value">
+                            {% if blockchain_connected %}
+                            <i class="fas fa-circle text-success"></i> Connected
+                            {% else %}
+                            <i class="fas fa-circle text-danger"></i> Offline
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% if contract_address %}
+                    <div class="status-item">
+                        <span class="status-label">Contract</span>
+                        <span class="status-value text-small">{{ contract_address[:10] }}...</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Use Cases Card -->
+            <div class="info-card">
+                <div class="card-title">
+                    <i class="fas fa-bullseye"></i>
+                    <h3>Applications</h3>
+                </div>
+                <ul class="use-cases">
+                    <li><i class="fas fa-newspaper"></i> News Verification</li>
+                    <li><i class="fas fa-gavel"></i> Legal Evidence</li>
+                    <li><i class="fas fa-share-alt"></i> Social Media</li>
+                    <li><i class="fas fa-building"></i> Corporate Security</li>
                 </ul>
             </div>
             
-            <div class="info-card">
-                <h3><i class="fas fa-link"></i> Blockchain Verification</h3>
-                <p>Every video generates a unique SHA-256 hash that can be registered on the Ethereum blockchain for permanent verification.</p>
-                <ul>
-                    <li>Immutable records</li>
-                    <li>Timestamp verification</li>
-                    <li>Ownership tracking</li>
-                    <li>Public verification</li>
-                </ul>
-            </div>
-            
-            <div class="info-card">
-                <h3><i class="fas fa-shield-alt"></i> Use Cases</h3>
-                <p>This technology is essential for:</p>
-                <ul>
-                    <li>Journalism & News Verification</li>
-                    <li>Legal Evidence Authentication</li>
-                    <li>Social Media Content Moderation</li>
-                    <li>Corporate Communications</li>
-                    <li>Enter Industry Content Protection</li>
-                </ul>
+            <!-- Help Card -->
+            <div class="info-card help-card">
+                <i class="fas fa-question-circle"></i>
+                <h4>Need Help?</h4>
+                <p>Ensure videos are clear and under 500MB for best results</p>
+                <a href="#" class="help-link">View Guidelines →</a>
             </div>
         </div>
     </div>
 </div>
 
-<!-- JavaScript for Upload Interaction -->
+<style>
+/* Modern Upload Page Styles - Maintaining Your Theme */
+
+.upload-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+    padding: 24px 0;
+}
+
+/* Upload Main Card */
+.upload-main {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.upload-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 24px 24px 16px;
+    text-align: center;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.header-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+}
+
+.header-icon i {
+    font-size: 28px;
+    color: white;
+}
+
+.card-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 8px;
+    color: #2d3748;
+}
+
+.text-muted {
+    color: #718096;
+    font-size: 14px;
+    margin: 0;
+}
+
+.card-body {
+    padding: 24px;
+}
+
+/* File Dropzone */
+.file-dropzone {
+    border: 2px dashed #e2e8f0;
+    border-radius: 12px;
+    background: #fafbfc;
+    transition: all 0.2s;
+    margin-bottom: 20px;
+    cursor: pointer;
+}
+
+.file-dropzone:hover {
+    border-color: #667eea;
+    background: #f5f7ff;
+}
+
+.file-dropzone.highlight {
+    border-color: #667eea;
+    background: #f0f3ff;
+}
+
+.dropzone-default {
+    padding: 40px 24px;
+    text-align: center;
+}
+
+.dropzone-default i {
+    font-size: 48px;
+    color: #a0aec0;
+    margin-bottom: 16px;
+}
+
+.dropzone-default h3 {
+    font-size: 18px;
+    font-weight: 500;
+    margin: 0 0 8px;
+    color: #2d3748;
+}
+
+.dropzone-default p {
+    color: #718096;
+    margin: 0 0 8px;
+}
+
+.browse-link {
+    color: #667eea;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.dropzone-default small {
+    color: #a0aec0;
+    font-size: 12px;
+}
+
+/* Preview State */
+.dropzone-preview {
+    padding: 20px;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #f0f3ff;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.file-info i.fa-check-circle {
+    color: #48bb78;
+    font-size: 20px;
+}
+
+.file-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.filename {
+    font-weight: 500;
+    color: #2d3748;
+    font-size: 14px;
+}
+
+.filesize {
+    color: #718096;
+    font-size: 12px;
+}
+
+.btn-remove {
+    background: none;
+    border: none;
+    color: #a0aec0;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.btn-remove:hover {
+    background: #fed7d7;
+    color: #e53e3e;
+}
+
+.file-ready {
+    text-align: center;
+}
+
+.ready-badge {
+    background: #c6f6d5;
+    color: #22543d;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 16px;
+    display: inline-block;
+}
+
+/* Options Panel */
+.options-panel {
+    background: #fafbfc;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.options-panel h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4a5568;
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.options-grid {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.option-chip {
+    cursor: pointer;
+}
+
+.chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 24px;
+    font-size: 13px;
+    color: #4a5568;
+    transition: all 0.2s;
+}
+
+.option-chip input:checked + .chip {
+    background: #667eea;
+    border-color: #667eea;
+    color: white;
+}
+
+.option-chip input:checked + .chip i {
+    color: white;
+}
+
+.chip i {
+    color: #a0aec0;
+    font-size: 12px;
+}
+
+/* Analyze Button */
+.btn-analyze {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-analyze:hover:not(:disabled) {
+    opacity: 0.9;
+}
+
+.btn-analyze:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Timeline Card */
+.timeline-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.timeline-card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.timeline-step {
+    display: flex;
+    gap: 12px;
+    position: relative;
+}
+
+.timeline-step:not(:last-child):before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 30px;
+    bottom: -20px;
+    width: 2px;
+    background: #e2e8f0;
+}
+
+.step-marker {
+    width: 32px;
+    height: 32px;
+    background: #f0f3ff;
+    border: 2px solid #667eea;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    color: #667eea;
+    background: white;
+    z-index: 1;
+}
+
+.step-content {
+    flex: 1;
+    padding-bottom: 8px;
+}
+
+.step-content h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 4px;
+}
+
+.step-content p {
+    font-size: 13px;
+    color: #718096;
+    margin: 0;
+}
+
+/* Sidebar Cards */
+.upload-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.info-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.stats-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    background: #f0f3ff;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-icon i {
+    color: #667eea;
+    font-size: 18px;
+}
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 16px;
+}
+
+.stat-label {
+    color: #718096;
+    font-size: 12px;
+}
+
+.card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.card-title i {
+    color: #667eea;
+    font-size: 18px;
+}
+
+.card-title h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0;
+}
+
+.status-display {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status-label {
+    color: #718096;
+    font-size: 13px;
+}
+
+.status-value {
+    font-weight: 500;
+    color: #2d3748;
+}
+
+.status-value.text-small {
+    font-size: 12px;
+    font-family: monospace;
+}
+
+.text-success {
+    color: #48bb78;
+}
+
+.text-danger {
+    color: #f56565;
+}
+
+.use-cases {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.use-cases li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    color: #4a5568;
+    font-size: 13px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.use-cases li:last-child {
+    border-bottom: none;
+}
+
+.use-cases li i {
+    color: #667eea;
+    width: 18px;
+}
+
+.help-card {
+    text-align: center;
+    background: linear-gradient(135deg, #fafbff 0%, #f5f7ff 100%);
+}
+
+.help-card i {
+    font-size: 32px;
+    color: #667eea;
+    margin-bottom: 12px;
+}
+
+.help-card h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 8px;
+}
+
+.help-card p {
+    font-size: 13px;
+    color: #718096;
+    margin: 0 0 12px;
+}
+
+.help-link {
+    color: #667eea;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.help-link:hover {
+    text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .upload-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
 <script>
-    const dropArea = document.getElementById('dropArea');
+document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
-    const filePreview = document.getElementById('filePreview');
+    const defaultState = document.getElementById('defaultState');
+    const previewState = document.getElementById('previewState');
     const fileName = document.getElementById('fileName');
     const fileSize = document.getElementById('fileSize');
-    const removeFile = document.getElementById('removeFile');
+    const removeBtn = document.getElementById('removeFile');
     const submitBtn = document.getElementById('submitBtn');
     
-    // Click to browse
-    dropArea.addEventListener('click', () => fileInput.click());
-    
-    // File selection
-    fileInput.addEventListener('change', function() {
-        if (this.files.length > 0) {
-            const file = this.files[0];
-            updateFilePreview(file);
+    // Click handlers
+    dropZone.addEventListener('click', (e) => {
+        if (e.target !== removeBtn && !removeBtn.contains(e.target)) {
+            fileInput.click();
         }
     });
     
-    // Drag and drop
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, preventDefaults, false);
-    });
-    
-    function preventDefaults(e) {
+    dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
-        e.stopPropagation();
-    }
-    
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropArea.addEventListener(eventName, highlight, false);
+        dropZone.classList.add('highlight');
     });
     
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, unhighlight, false);
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('highlight');
     });
     
-    function highlight() {
-        dropArea.classList.add('highlight');
-    }
-    
-    function unhighlight() {
-        dropArea.classList.remove('highlight');
-    }
-    
-    dropArea.addEventListener('drop', handleDrop, false);
-    
-    function handleDrop(e) {
-        const dt = e.dataTransfer;
-        const files = dt.files;
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('highlight');
         
-        if (files.length > 0) {
-            fileInput.files = files;
-            updateFilePreview(files[0]);
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            handleFileSelect(file);
         }
-    }
+    });
     
-    function updateFilePreview(file) {
+    fileInput.addEventListener('change', function() {
+        if (this.files[0]) {
+            handleFileSelect(this.files[0]);
+        }
+    });
+    
+    function handleFileSelect(file) {
         // Validate file type
-        const validTypes = ['video/mp4', 'video/avi', 'video/quicktime', 'video/x-matroska', 'video/webm'];
+        const validTypes = ['video/mp4', 'video/avi', 'video/quicktime', 'video/x-matroska', 'video/webm', 'video/x-msvideo'];
         if (!validTypes.includes(file.type)) {
             alert('Please upload a valid video file (MP4, AVI, MOV, MKV, WEBM)');
             return;
         }
         
-        // Validate file size (500MB limit)
+        // Validate size (500MB)
         if (file.size > 500 * 1024 * 1024) {
             alert('File size exceeds 500MB limit');
             return;
@@ -232,38 +787,44 @@
         // Update preview
         fileName.textContent = file.name;
         fileSize.textContent = formatFileSize(file.size);
-        filePreview.style.display = 'flex';
-        dropArea.querySelector('.upload-placeholder').style.display = 'none';
         
-        // Enable submit button
+        defaultState.style.display = 'none';
+        previewState.style.display = 'block';
         submitBtn.disabled = false;
+        
+        // Update file input
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
     }
     
-    function formatFileSize(bytes) {
-        if (bytes < 1024) return bytes + ' bytes';
-        else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-        else return (bytes / 1048576).toFixed(1) + ' MB';
-    }
-    
-    // Remove file
-    removeFile.addEventListener('click', function() {
+    removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         fileInput.value = '';
-        filePreview.style.display = 'none';
-        dropArea.querySelector('.upload-placeholder').style.display = 'block';
+        defaultState.style.display = 'block';
+        previewState.style.display = 'none';
         submitBtn.disabled = true;
     });
+    
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / 1048576).toFixed(1) + ' MB';
+    }
     
     // Form submission
     document.getElementById('uploadForm').addEventListener('submit', function(e) {
         if (!fileInput.files.length) {
             e.preventDefault();
-            alert('Please select a video file first');
+            alert('Please select a video file');
             return;
         }
         
-        // Show loading state
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
-        submitBtn.disabled = true;
+        const btn = submitBtn;
+        btn.disabled = true;
+        btn.querySelector('.btn-text').style.display = 'none';
+        btn.querySelector('.btn-loading').style.display = 'inline-block';
     });
+});
 </script>
 {% endblock %}

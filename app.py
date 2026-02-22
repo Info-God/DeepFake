@@ -1,15 +1,19 @@
 import hashlib
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_file
-from report_generator import  generate_simple_report
+from report_generator import generate_simple_report
 import os
 from detect import load_model, predict_video
 from utils import compute_file_sha256
 from web3 import Web3
 import json
 from datetime import datetime
+from dotenv import load_dotenv
 
+# Load environment variables from .env file
+load_dotenv()
 
 ADMIN_PASSWORD = "admin123"
+
 # Flask setup
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -29,41 +33,102 @@ contract_address = None
 blockchain_connected = False
 
 # Try to connect to blockchain
-try:
-    w3 = Web3(Web3.HTTPProvider(GANACHE_URL))
-    
-    # Check connection
-    if w3.is_connected():
-        blockchain_connected = True
-        print("✅ Connected to Ganache")
+if GANACHE_URL:
+    try:
+        w3 = Web3(Web3.HTTPProvider(GANACHE_URL))
         
-        # Try to load contract
-        try:
-            with open("contract/MediaRegistry.json", "r") as f:
-                contract_data = json.load(f)
+        # Check connection
+        if w3.is_connected():
+            blockchain_connected = True
+            print("✅ Connected to Ganache")
+            print(f"✅ Chain ID: {w3.eth.chain_id}")
             
-            contract_address = contract_data["address"]
-            contract_abi = contract_data["abi"]
+            # Try to load contract
+            try:
+                with open("contract/MediaRegistry.json", "r") as f:
+                    contract_data = json.load(f)
+                
+                contract_address = contract_data["address"]
+                contract_abi = contract_data["abi"]
+                
+                contract = w3.eth.contract(
+                    address=contract_address,
+                    abi=contract_abi
+                )
+                print(f"✅ Contract loaded: {contract_address}")
+                
+            except FileNotFoundError:
+                print("⚠️ Contract file not found. Run deploy_and_register.py first")
+            except Exception as e:
+                print(f"⚠️ Error loading contract: {e}")
+                
+        else:
+            print("❌ Cannot connect to Ganache. Make sure it's running on http://127.0.0.1:7545")
             
-            contract = w3.eth.contract(
-                address=contract_address,
-                abi=contract_abi
-            )
-            print(f"✅ Contract loaded: {contract_address}")
-            
-        except FileNotFoundError:
-            print("⚠️ Contract file not found. Run deploy_and_register.py first")
-        except Exception as e:
-            print(f"⚠️ Error loading contract: {e}")
-            
-    else:
-        print("❌ Cannot connect to Ganache. Make sure it's running on http://127.0.0.1:7545")
-        
-except Exception as e:
-    print(f"⚠️ Blockchain setup failed: {e}")
+    except Exception as e:
+        print(f"⚠️ Blockchain setup failed: {e}")
+else:
+    print("❌ GANACHE_URL not found in .env file")
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def get_blockchain_stats():
+    """Helper function to get blockchain stats"""
+    stats = {
+        'blockchain_connected': blockchain_connected,
+        'registered_count': 0
+    }
+    
+    if blockchain_connected and contract:
+        try:
+            # Try different method names that might exist in your contract
+            try:
+                count = contract.functions.getRegisteredCount().call()
+                stats['registered_count'] = count
+            except:
+                try:
+                    # Try alternative method name
+                    count = contract.functions.getMediaCount().call()
+                    stats['registered_count'] = count
+                except:
+                    # If no count function exists, just show N/A
+                    stats['registered_count'] = "N/A"
+        except:
+            stats['registered_count'] = "N/A"
+    
+    return stats
+
+@app.route('/')
+def index():
+    # Get blockchain stats
+    stats = get_blockchain_stats()
+    
+    return render_template('index.html', 
+                         stats=stats,
+                         contract_address=contract_address,
+                         blockchain_connected=blockchain_connected)
+
+@app.route('/detect')
+def upload_video_page():
+    """Page for uploading videos for full analysis"""
+    stats = get_blockchain_stats()
+    
+    return render_template('upload_video.html',
+                         stats=stats,
+                         contract_address=contract_address,
+                         blockchain_connected=blockchain_connected)
+
+@app.route('/verify')
+def verify_only_page():
+    """Page for blockchain-only verification"""
+    stats = get_blockchain_stats()
+    
+    return render_template('verify_only.html',
+                         stats=stats,
+                         contract_address=contract_address,
+                         blockchain_connected=blockchain_connected)
+
 @app.route('/upload', methods=['POST'])
 def upload_video():
     if 'video' not in request.files:
@@ -165,7 +230,7 @@ def upload_video():
         registered=registered,
         blockchain_data=blockchain_data,
         blockchain_connected=blockchain_connected,
-        show_report_button=True  # New flag for report generation
+        show_report_button=True
     )
 
 @app.route('/verify_only', methods=['POST'])
@@ -232,11 +297,12 @@ def verify_only():
     if os.path.exists(filepath):
         os.remove(filepath)
     
-    return render_template('verify_only.html',
+    # IMPORTANT: Return the result page with the verification data
+    return render_template('verify_result.html',  # This renders the result page
                          filename=filename,
                          blockchain_data=blockchain_data,
-                         blockchain_connected=blockchain_connected)
-
+                         blockchain_connected=blockchain_connected,
+                         contract_address=contract_address)
 @app.route('/register_video', methods=['POST'])
 def register_video():
     """Register a video on blockchain"""
@@ -258,10 +324,13 @@ def register_video():
     # Get description from form
     description = request.form.get('description', 'Verified Authentic Video')
     
-    # You'll need to import your PRIVATE_KEY and ACCOUNT_ADDRESS
-    # For testing, you can hardcode them or get from environment
-    PRIVATE_KEY = "0x292b950ec019daf475f79055aea7e00dd3cefbb039f40e35f86601f464154ff9"  # From your deploy script
-    ACCOUNT_ADDRESS = "0x5cC49064eEA0C9f4d16f0f1Ca1b79C736048690d"  # From your deploy script
+    # Get private key and account address from environment variables
+    PRIVATE_KEY = os.getenv("PRIVATE_KEY")
+    ACCOUNT_ADDRESS = os.getenv("ACCOUNT_ADDRESS")
+    
+    if not PRIVATE_KEY or not ACCOUNT_ADDRESS:
+        flash('Blockchain credentials not configured in .env file', 'error')
+        return redirect(url_for('index'))
     
     try:
         # Build transaction
@@ -287,22 +356,21 @@ def register_video():
     
     return redirect(url_for('index'))
 
-
-@app.route('/admin', methods=['GET', 'POST'])
-def admin_login():
-    """Admin login page"""
-    if request.method == 'POST':
-        password = request.form.get('password')
-        if password == ADMIN_PASSWORD:
-            session['admin_logged_in'] = True
-            return redirect(url_for('admin_panel'))
-        else:
-            flash('Incorrect password', 'error')
+# @app.route('/admin', methods=['GET', 'POST'])
+# def admin_login():
+#     """Admin login page"""
+#     if request.method == 'POST':
+#         password = request.form.get('password')
+#         if password == ADMIN_PASSWORD:
+#             session['admin_logged_in'] = True
+#             return redirect(url_for('admin_panel'))
+#         else:
+#             flash('Incorrect password', 'error')
     
-    # Pass required variables to template
-    return render_template('admin_login.html',
-                         contract_address=contract_address,
-                         blockchain_connected=blockchain_connected)
+#     # Pass required variables to template
+#     return render_template('admin_login.html',
+#                          contract_address=contract_address,
+#                          blockchain_connected=blockchain_connected)
 
 @app.route('/admin_register', methods=['POST'])
 def admin_register():
@@ -335,8 +403,12 @@ def admin_register():
     video_hash = compute_file_sha256(filepath)
     
     # Register on blockchain
-    PRIVATE_KEY = "0x292b950ec019daf475f79055aea7e00dd3cefbb039f40e35f86601f464154ff9"
-    ACCOUNT_ADDRESS = "0x5cC49064eEA0C9f4d16f0f1Ca1b79C736048690d"
+    PRIVATE_KEY = os.getenv("PRIVATE_KEY")
+    ACCOUNT_ADDRESS = os.getenv("ACCOUNT_ADDRESS")
+    
+    if not PRIVATE_KEY or not ACCOUNT_ADDRESS:
+        flash('Blockchain credentials not configured in .env file', 'error')
+        return redirect(url_for('admin_panel'))
     
     try:
         # Check if already registered
@@ -371,40 +443,76 @@ def admin_register():
     
     return redirect(url_for('admin_panel'))
 
+# @app.route('/admin_panel')
+# def admin_panel():
+#     """Admin panel to register videos"""
+#     if not session.get('admin_logged_in'):
+#         return redirect(url_for('admin_login'))
+    
+#     # Get list of registered videos (you need to track these)
+#     registered_videos = []
+    
+#     # Get stats
+#     stats = get_blockchain_stats()
+    
+#     return render_template('admin.html',
+#                          registered_videos=registered_videos,
+#                          stats=stats,
+#                          contract_address=contract_address,
+#                          blockchain_connected=blockchain_connected)
 
-@app.route('/admin_panel')
+# @app.route('/admin_logout')
+# def admin_logout():
+#     session.pop('admin_logged_in', None)
+#     return redirect(url_for('index'))
+
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    """Admin login page"""
+    # If already logged in, redirect to admin panel
+    if session.get('admin_logged_in'):
+        return redirect(url_for('admin_panel'))
+    
+    if request.method == 'POST':
+        password = request.form.get('password')
+        if password == ADMIN_PASSWORD:
+            session['admin_logged_in'] = True
+            flash('Successfully logged in as admin', 'success')
+            return redirect(url_for('admin_panel'))
+        else:
+            flash('Incorrect password', 'error')
+    
+    # Pass required variables to template
+    return render_template('admin_login.html',
+                         contract_address=contract_address,
+                         blockchain_connected=blockchain_connected)
+
+@app.route('/admin/panel')
 def admin_panel():
     """Admin panel to register videos"""
+    # Check if user is logged in
     if not session.get('admin_logged_in'):
+        flash('Please login first', 'error')
         return redirect(url_for('admin_login'))
     
     # Get list of registered videos (you need to track these)
     registered_videos = []
     
     # Get stats
-    stats = {
-        'blockchain_connected': blockchain_connected,
-        'registered_count': 0
-    }
-    
-    if blockchain_connected and contract:
-        try:
-            count = contract.functions.getRegisteredCount().call()
-            stats['registered_count'] = count
-        except:
-            stats['registered_count'] = "N/A"
+    stats = get_blockchain_stats()
     
     return render_template('admin.html',
                          registered_videos=registered_videos,
                          stats=stats,
                          contract_address=contract_address,
                          blockchain_connected=blockchain_connected)
-@app.route('/admin_logout')
+
+@app.route('/admin/logout')
 def admin_logout():
     session.pop('admin_logged_in', None)
-    return redirect(url_for('index'))
-
-# Add new route for report generation
+    flash('Successfully logged out', 'success')
+    return redirect(url_for('admin_login'))
 @app.route('/generate_report/<filename>')
 def generate_report(filename):
     """Generate and download verification report"""
@@ -462,55 +570,6 @@ def download_report(filename):
     except Exception as e:
         flash(f'Download failed: {str(e)}', 'error')
         return redirect(url_for('index'))
-
-
-
-# Add these routes AFTER the index() route but BEFORE the upload_video() route
-
-@app.route('/detect')
-def upload_video_page():
-    """Page for uploading videos for full analysis"""
-    return render_template('upload_video.html',
-                         stats={'blockchain_connected': blockchain_connected},
-                         contract_address=contract_address,
-                         blockchain_connected=blockchain_connected)
-
-@app.route('/verify')
-def verify_only_page():
-    """Page for blockchain-only verification"""
-    return render_template('verify_only.html',  # Create this template
-                         stats={'blockchain_connected': blockchain_connected},
-                         contract_address=contract_address,
-                         blockchain_connected=blockchain_connected)
-
-@app.route('/')
-def index():
-    # Get blockchain stats
-    stats = {
-        'blockchain_connected': blockchain_connected,
-        'registered_count': 0
-    }
-    
-    if blockchain_connected and contract:
-        try:
-            # Try to get count from contract
-            # Note: Your contract might not have getRegisteredCount function
-            # If it doesn't, just show N/A
-            try:
-                count = contract.functions.getRegisteredCount().call()
-                stats['registered_count'] = count
-            except:
-                # Try alternative: check if any function exists
-                stats['registered_count'] = "N/A"
-        except:
-            stats['registered_count'] = "N/A"
-    
-    return render_template('index.html', 
-                         stats=stats,
-                         contract_address=contract_address,
-                         blockchain_connected=blockchain_connected)
-
-
 
 if __name__ == '__main__':
     # Create uploads folder if it doesn't exist

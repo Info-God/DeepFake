@@ -11,122 +11,851 @@
 </div>
 
 <div class="container">
-    <div class="verify-container">
-        <div class="verify-card">
-            <div class="verify-header">
-                <div class="verify-icon">
-                    <i class="fas fa-bolt"></i>
+    <div class="verify-grid">
+        <!-- Main Verification Card -->
+        <div class="verify-main">
+            <div class="verify-card">
+                <div class="card-header">
+                    <div class="header-icon">
+                        <i class="fas fa-file-contract"></i>
+                    </div>
+                    <h2>Verify Video on Blockchain</h2>
+                    <p class="text-muted">Upload any video to check its registration status</p>
                 </div>
-                <h2>Quick Blockchain Check</h2>
-                <p>No AI analysis - Just blockchain verification</p>
-            </div>
-            
-            <div class="verify-body">
-                <form action="{{ url_for('verify_only') }}" method="post" enctype="multipart/form-data" class="verify-form" id="verifyForm">
-                    <!-- File Upload -->
-                    <div class="file-upload-area verify-upload" id="verifyDropArea">
-                        <input type="file" name="video" id="verifyFileInput" accept="video/*" required hidden>
-                        
-                        <div class="upload-placeholder">
-                            <div class="placeholder-icon">
-                                <i class="fas fa-file-upload"></i>
-                            </div>
-                            <h3>Select Video File</h3>
-                            <p>Click to browse or drag & drop</p>
-                            <p class="file-types">Any video format supported</p>
-                        </div>
-                        
-                        <div class="file-preview" id="verifyFilePreview" style="display: none;">
-                            <div class="preview-icon">
+                
+                <div class="card-body">
+                    <form action="{{ url_for('verify_only') }}" method="post" enctype="multipart/form-data" id="verifyForm">
+                        <!-- File Upload Area -->
+                        <div class="file-dropzone" id="verifyDropZone">
+                            <input type="file" name="video" id="verifyFileInput" accept="video/*" required hidden>
+                            
+                            <!-- Default State -->
+                            <div class="dropzone-default" id="verifyDefaultState">
                                 <i class="fas fa-file-video"></i>
+                                <h3>Drop your video here</h3>
+                                <p>or <span class="browse-link">click to browse</span></p>
+                                <small>Supports: MP4, AVI, MOV, MKV, WEBM</small>
                             </div>
-                            <div class="preview-info">
-                                <h4 id="verifyFileName">File Name</h4>
-                                <p id="verifyFileSize">File Size</p>
-                                <button type="button" class="btn-remove" id="verifyRemoveFile">
-                                    <i class="fas fa-times"></i> Remove
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Blockchain Info -->
-                    <div class="blockchain-info">
-                        <h3><i class="fas fa-info-circle"></i> How Blockchain Verification Works</h3>
-                        <div class="blockchain-steps">
-                            <div class="blockchain-step">
-                                <div class="step-icon"><i class="fas fa-hashtag"></i></div>
-                                <div class="step-content">
-                                    <h4>1. Generate Hash</h4>
-                                    <p>System creates SHA-256 hash of your video</p>
+                            
+                            <!-- Preview State -->
+                            <div class="dropzone-preview" id="verifyPreviewState" style="display: none;">
+                                <div class="file-info">
+                                    <i class="fas fa-check-circle"></i>
+                                    <div class="file-details">
+                                        <span class="filename" id="verifyFileName"></span>
+                                        <span class="filesize" id="verifyFileSize"></span>
+                                    </div>
+                                    <button type="button" class="btn-remove" id="verifyRemoveFile">
+                                        <i class="fas fa-times"></i>
+                                    </button>
                                 </div>
-                            </div>
-                            <div class="blockchain-step">
-                                <div class="step-icon"><i class="fas fa-search"></i></div>
-                                <div class="step-content">
-                                    <h4>2. Check Blockchain</h4>
-                                    <p>Hash is searched in Ethereum smart contract</p>
-                                </div>
-                            </div>
-                            <div class="blockchain-step">
-                                <div class="step-icon"><i class="fas fa-check-circle"></i></div>
-                                <div class="step-content">
-                                    <h4>3. Get Results</h4>
-                                    <p>Immediate verification status</p>
+                                <div class="file-ready">
+                                    <span class="ready-badge">Ready for verification</span>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Current Blockchain Status -->
-                    <div class="current-status">
-                        <h3><i class="fas fa-network-wired"></i> Current Blockchain Status</h3>
-                        <div class="status-display">
+                        
+                        <!-- Blockchain Status Bar -->
+                        <div class="status-bar">
                             <div class="status-item">
-                                <span class="status-label">Network:</span>
-                                <span class="status-value">Ethereum (Ganache Local)</span>
+                                <span class="status-label">
+                                    <i class="fas fa-circle" style="color: {% if blockchain_connected %}#48bb78{% else %}#f56565{% endif %}; font-size: 10px;"></i>
+                                    Blockchain:
+                                </span>
+                                <span class="status-value {% if blockchain_connected %}text-success{% else %}text-danger{% endif %}">
+                                    {% if blockchain_connected %}Connected{% else %}Offline{% endif %}
+                                </span>
                             </div>
+                            {% if contract_address %}
                             <div class="status-item">
-    <span class="status-label">Contract:</span>
-    <span class="status-value">
-        {% if contract_address %}
-            {{ contract_address[:20] }}...
-        {% else %}
-            <span class="text-muted">Not available</span>
-        {% endif %}
-    </span>
-</div>
-                            <div class="status-item">
-                                <span class="status-label">Registered Videos:</span>
-                                <span class="status-value">{{ stats.registered_count }}</span>
+                                <span class="status-label">
+                                    <i class="fas fa-code"></i> Contract:
+                                </span>
+                                <span class="status-value contract-address">
+                                    {{ contract_address[:8] }}...{{ contract_address[-6:] }}
+                                </span>
                             </div>
+                            {% endif %}
                             <div class="status-item">
-                                <span class="status-label">Connection:</span>
-                                <span class="status-value {% if blockchain_connected %}connected{% else %}disconnected{% endif %}">
-                                    {% if blockchain_connected %}Connected{% else %}Disconnected{% endif %}
+                                <span class="status-label">
+                                    <i class="fas fa-database"></i> Network:
+                                </span>
+                                <span class="status-value">
+                                    Ethereum (Ganache)
                                 </span>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Submit Button -->
-                    <div class="verify-action">
-                        <button type="submit" class="btn-secondary btn-large" id="verifySubmitBtn">
-                            <i class="fas fa-bolt"></i> Verify on Blockchain
+                        
+                        <!-- Verification Process Info -->
+                        <div class="process-info">
+                            <h4><i class="fas fa-cogs"></i> Verification Process</h4>
+                            <div class="process-steps">
+                                <div class="process-step">
+                                    <div class="step-number">01</div>
+                                    <div class="step-desc">
+                                        <strong>Hash Generation</strong>
+                                        <span>SHA-256 hash of video file</span>
+                                    </div>
+                                </div>
+                                <div class="process-step">
+                                    <div class="step-number">02</div>
+                                    <div class="step-desc">
+                                        <strong>Smart Contract Query</strong>
+                                        <span>Check against MediaRegistry</span>
+                                    </div>
+                                </div>
+                                <div class="process-step">
+                                    <div class="step-number">03</div>
+                                    <div class="step-desc">
+                                        <strong>Verification Result</strong>
+                                        <span>Get registration status</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn-verify" id="verifySubmitBtn" disabled>
+                            <span class="btn-text">
+                                <i class="fas fa-shield-alt"></i> Verify on Blockchain
+                            </span>
+                            <span class="btn-loading" style="display: none;">
+                                <i class="fas fa-spinner fa-spin"></i> Verifying...
+                            </span>
                         </button>
-                        <p class="verify-note">
-                            <i class="fas fa-clock"></i> Verification completes in seconds
-                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar Information -->
+        <div class="verify-sidebar">
+            <!-- Quick Stats -->
+            <div class="info-card">
+                <h3><i class="fas fa-chart-bar"></i> Registry Stats</h3>
+                <div class="stats-list">
+                    <div class="stat-row">
+                        <span class="stat-label">Total Registered:</span>
+                        <span class="stat-number">{{ stats.registered_count if stats.registered_count else 0 }}</span>
                     </div>
-                </form>
+                    <div class="stat-row">
+                        <span class="stat-label">Contract Status:</span>
+                        <span class="stat-badge {% if contract_address %}active{% else %}inactive{% endif %}">
+                            {% if contract_address %}Active{% else %}Not Deployed{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- How It Works -->
+            <div class="info-card">
+                <h3><i class="fas fa-lightbulb"></i> How It Works</h3>
+                <div class="info-list">
+                    <div class="info-item">
+                        <i class="fas fa-hashtag"></i>
+                        <div>
+                            <strong>Video Hash</strong>
+                            <p>Every video generates a unique fingerprint</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-link"></i>
+                        <div>
+                            <strong>Blockchain Registry</strong>
+                            <p>Hashes are stored permanently on Ethereum</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-check-double"></i>
+                        <div>
+                            <strong>Instant Verification</strong>
+                            <p>Check authenticity in seconds</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Benefits -->
+            <div class="info-card benefit-card">
+                <h3><i class="fas fa-star"></i> Benefits</h3>
+                <ul class="benefit-list">
+                    <li><i class="fas fa-lock"></i> Tamper-proof records</li>
+                    <li><i class="fas fa-clock"></i> Timestamp verification</li>
+                    <li><i class="fas fa-globe"></i> Publicly verifiable</li>
+                    <li><i class="fas fa-bolt"></i> No AI analysis needed</li>
+                    <li><i class="fas fa-file"></i> Supports all video formats</li>
+                </ul>
+            </div>
+            
+            <!-- Connection Status -->
+            <div class="info-card connection-card">
+                <h3><i class="fas fa-plug"></i> Connection Details</h3>
+                <div class="connection-details">
+                    <p>
+                        <i class="fas fa-network-wired"></i>
+                        <span>Ganache: http://127.0.0.1:7545</span>
+                    </p>
+                    <p>
+                        <i class="fas fa-fingerprint"></i>
+                        <span>Chain ID: 1337</span>
+                    </p>
+                    {% if blockchain_connected %}
+                    <p class="text-success">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Connected to blockchain</span>
+                    </p>
+                    {% else %}
+                    <p class="text-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>Blockchain offline - Start Ganache</span>
+                    </p>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Similar JavaScript as upload page for file handling -->
+<style>
+/* Verification Page Specific Styles */
+.verify-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+    padding: 24px 0;
+}
+
+.verify-main {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.verify-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 28px 28px 20px;
+    text-align: center;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.header-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+}
+
+.header-icon i {
+    font-size: 32px;
+    color: white;
+}
+
+.card-header h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 8px;
+}
+
+.card-body {
+    padding: 28px;
+}
+
+/* File Dropzone */
+.file-dropzone {
+    border: 2px dashed #e2e8f0;
+    border-radius: 16px;
+    background: #fafbfc;
+    transition: all 0.2s ease;
+    margin-bottom: 24px;
+    cursor: pointer;
+}
+
+.file-dropzone:hover {
+    border-color: #667eea;
+    background: #f5f7ff;
+}
+
+.file-dropzone.highlight {
+    border-color: #667eea;
+    background: #f0f3ff;
+}
+
+.dropzone-default {
+    padding: 48px 32px;
+    text-align: center;
+}
+
+.dropzone-default i {
+    font-size: 56px;
+    color: #a0aec0;
+    margin-bottom: 16px;
+}
+
+.dropzone-default h3 {
+    font-size: 20px;
+    font-weight: 500;
+    color: #2d3748;
+    margin: 0 0 8px;
+}
+
+.dropzone-default p {
+    color: #718096;
+    margin: 0 0 8px;
+}
+
+.browse-link {
+    color: #667eea;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.2s;
+}
+
+.browse-link:hover {
+    border-bottom-color: #667eea;
+}
+
+.dropzone-default small {
+    color: #a0aec0;
+    font-size: 13px;
+}
+
+/* Preview State */
+.dropzone-preview {
+    padding: 24px;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: linear-gradient(135deg, #f5f7ff 0%, #f0f3ff 100%);
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.file-info i.fa-check-circle {
+    color: #48bb78;
+    font-size: 24px;
+}
+
+.file-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.filename {
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 15px;
+    word-break: break-word;
+}
+
+.filesize {
+    color: #718096;
+    font-size: 13px;
+}
+
+.btn-remove {
+    background: rgba(255, 255, 255, 0.5);
+    border: none;
+    color: #718096;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-remove:hover {
+    background: #fed7d7;
+    color: #e53e3e;
+}
+
+.file-ready {
+    text-align: center;
+}
+
+.ready-badge {
+    background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+    color: #22543d;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 16px;
+    border-radius: 30px;
+    display: inline-block;
+}
+
+/* Status Bar */
+.status-bar {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 160px;
+}
+
+.status-label {
+    color: #718096;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-value {
+    color: #2d3748;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.contract-address {
+    font-family: 'Monaco', 'Menlo', monospace;
+    background: #edf2f7;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+/* Process Info */
+.process-info {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 1px solid #e2e8f0;
+}
+
+.process-info h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.process-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.process-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    background: #f0f3ff;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: #667eea;
+    flex-shrink: 0;
+}
+
+.step-desc {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.step-desc strong {
+    font-size: 14px;
+    color: #2d3748;
+}
+
+.step-desc span {
+    font-size: 13px;
+    color: #718096;
+}
+
+/* Verify Button */
+.btn-verify {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+}
+
+.btn-verify:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-verify:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #a0aec0;
+    box-shadow: none;
+}
+
+/* Sidebar Cards */
+.verify-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.info-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.info-card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+/* Stats List */
+.stats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-label {
+    color: #718096;
+    font-size: 13px;
+}
+
+.stat-number {
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 18px;
+}
+
+.stat-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.stat-badge.active {
+    background: #c6f6d5;
+    color: #22543d;
+}
+
+.stat-badge.inactive {
+    background: #fed7d7;
+    color: #742a2a;
+}
+
+/* Info List */
+.info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.info-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.info-item i {
+    color: #667eea;
+    font-size: 16px;
+    margin-top: 2px;
+}
+
+.info-item strong {
+    font-size: 14px;
+    color: #2d3748;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.info-item p {
+    font-size: 13px;
+    color: #718096;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Benefit List */
+.benefit-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.benefit-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    color: #4a5568;
+    font-size: 13px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.benefit-list li:last-child {
+    border-bottom: none;
+}
+
+.benefit-list li i {
+    color: #667eea;
+    width: 18px;
+}
+
+/* Connection Card */
+.connection-card {
+    background: linear-gradient(135deg, #fafbff 0%, #f5f7ff 100%);
+}
+
+.connection-details {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.connection-details p {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 13px;
+    color: #4a5568;
+}
+
+.connection-details i {
+    color: #667eea;
+    width: 16px;
+}
+
+/* Text Colors */
+.text-success {
+    color: #48bb78;
+}
+
+.text-danger {
+    color: #f56565;
+}
+
+.text-muted {
+    color: #a0aec0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .verify-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .status-bar {
+        flex-direction: column;
+        gap: 12px;
+    }
+}
+</style>
+
 <script>
-    // Similar JavaScript as upload_video.html for file handling
-    // You can reuse the same code with different IDs
+document.addEventListener('DOMContentLoaded', function() {
+    // Get all elements
+    const dropZone = document.getElementById('verifyDropZone');
+    const fileInput = document.getElementById('verifyFileInput');
+    const defaultState = document.getElementById('verifyDefaultState');
+    const previewState = document.getElementById('verifyPreviewState');
+    const fileName = document.getElementById('verifyFileName');
+    const fileSize = document.getElementById('verifyFileSize');
+    const removeBtn = document.getElementById('verifyRemoveFile');
+    const submitBtn = document.getElementById('verifySubmitBtn');
+    const form = document.getElementById('verifyForm');
+    
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    // Highlight drop zone on drag over
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight() {
+        dropZone.classList.add('highlight');
+    }
+    
+    function unhighlight() {
+        dropZone.classList.remove('highlight');
+    }
+    
+    // Handle dropped files
+    dropZone.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0) {
+            handleFileSelect(files[0]);
+        }
+    }
+    
+    // Handle click on dropzone
+    dropZone.addEventListener('click', function(e) {
+        // Don't trigger if clicking remove button
+        if (e.target === removeBtn || removeBtn.contains(e.target)) {
+            return;
+        }
+        fileInput.click();
+    });
+    
+    // Handle file input change
+    fileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            handleFileSelect(this.files[0]);
+        }
+    });
+    
+    // Handle file selection
+    function handleFileSelect(file) {
+        // Validate file type
+        const validTypes = ['video/mp4', 'video/avi', 'video/quicktime', 'video/x-matroska', 'video/webm', 'video/x-msvideo'];
+        const isValidType = validTypes.includes(file.type) || file.name.match(/\.(mp4|avi|mov|mkv|flv|webm)$/i);
+        
+        if (!isValidType) {
+            alert('Please upload a valid video file (MP4, AVI, MOV, MKV, WEBM)');
+            return;
+        }
+        
+        // Validate file size (500MB)
+        if (file.size > 500 * 1024 * 1024) {
+            alert('File size exceeds 500MB limit');
+            return;
+        }
+        
+        // Update preview
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        
+        // Show preview, hide default
+        defaultState.style.display = 'none';
+        previewState.style.display = 'block';
+        
+        // Enable submit button
+        submitBtn.disabled = false;
+        
+        // Set the file to input
+        // This is important for the form submission
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
+    }
+    
+    // Format file size
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+    
+    // Handle remove button
+    removeBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        
+        // Clear file input
+        fileInput.value = '';
+        
+        // Show default, hide preview
+        defaultState.style.display = 'block';
+        previewState.style.display = 'none';
+        
+        // Disable submit button
+        submitBtn.disabled = true;
+    });
+    
+    // Handle form submission
+    form.addEventListener('submit', function(e) {
+        if (!fileInput.files.length) {
+            e.preventDefault();
+            alert('Please select a video file first');
+            return;
+        }
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.querySelector('.btn-text').style.display = 'none';
+        submitBtn.querySelector('.btn-loading').style.display = 'inline-block';
+    });
+    
+    // Initialize - disable submit button
+    submitBtn.disabled = true;
+});
 </script>
 {% endblock %}
